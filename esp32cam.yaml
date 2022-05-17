@@ -1,0 +1,73 @@
+esphome:
+  name: esp32cam
+
+esp32:
+  board: esp32cam
+  framework:
+    type: arduino
+
+output:
+- platform: ledc
+  pin: GPIO4
+  id: gpio_4
+  channel: 2
+
+light:
+  - platform: monochromatic
+    output: gpio_4
+    name: Flash/PWM Light
+    restore_mode: ALWAYS_OFF
+
+# Enable logging
+logger:
+
+# Enable Home Assistant API
+api:
+  password: "dilbert45"
+
+ota:
+  password: "dilbert45"
+
+wifi:
+  ssid: "IoT"
+  password: "pnet2iot55"
+  fast_connect: on
+
+  # Enable fallback hotspot (captive portal) in case wifi connection fails
+  ap:
+    ssid: "Esp32Cam Fallback Hotspot"
+    password: "enNl8HJlavIG"
+
+captive_portal:
+
+time:
+  - platform: homeassistant
+    id: homeassistant_time
+
+sensor:
+  - platform: wifi_signal
+    id: signal_strength
+    name: "Wifi Signal Strength"
+    update_interval: 60s
+
+# Example configuration entry
+esp32_camera:
+  external_clock:
+    pin: GPIO0
+    frequency: 20MHz
+  i2c_pins:
+    sda: GPIO26
+    scl: GPIO27
+  data_pins: [GPIO5, GPIO18, GPIO19, GPIO21, GPIO36, GPIO39, GPIO34, GPIO35]
+  vsync_pin: GPIO25
+  href_pin: GPIO23
+  pixel_clock_pin: GPIO22
+  power_down_pin: GPIO32
+
+  # Image settings
+  name: My Camera
+  resolution: 800x600
+  max_framerate: 5 fps
+  idle_framerate: 0.2 fps
+  jpeg_quality: 10
+

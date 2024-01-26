@@ -1,10 +1,14 @@
 esphome:
+  platformio_options: 
+    abc: def
   name: esp32cam
 
 esp32:
   board: esp32cam
   framework:
     type: arduino
+    version: recommended
+
 
 output:
 - platform: ledc
@@ -23,20 +27,20 @@ logger:
 
 # Enable Home Assistant API
 api:
-  password: "dilbert45"
+  password: !secret api_password
 
 ota:
-  password: "dilbert45"
+  password: !secret ota_password
 
 wifi:
-  ssid: "IoT"
-  password: "pnet2iot55"
+  ssid: !secret ssid
+  password: !secret ssid_password
   fast_connect: on
 
   # Enable fallback hotspot (captive portal) in case wifi connection fails
   ap:
     ssid: "Esp32Cam Fallback Hotspot"
-    password: "enNl8HJlavIG"
+    password: !secret ap_password
 
 captive_portal:
 
@@ -52,6 +56,9 @@ sensor:
 
 # Example configuration entry
 esp32_camera:
+  aec_mode: AUTO
+  id: camera1
+  aec2: True
   external_clock:
     pin: GPIO0
     frequency: 20MHz
@@ -66,8 +73,12 @@ esp32_camera:
 
   # Image settings
   name: My Camera
-  resolution: 800x600
-  max_framerate: 5 fps
-  idle_framerate: 0.2 fps
+  resolution: SVGA
+  max_framerate: 10 fps
+  idle_framerate: 0.1 fps
   jpeg_quality: 10
+  wb_mode: home
+  agc_gain_ceiling: 128x
+  vertical_flip: False
+  horizontal_mirror: False
 

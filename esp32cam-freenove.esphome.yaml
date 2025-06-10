@@ -1,0 +1,215 @@
+esphome:
+  name: esp32cam-freenove
+  friendly_name: ESP32Cam FreeNove
+  name_add_mac_suffix: False
+  platformio_options:
+    board_build.arduino.memory_type: qio_opi
+    board_build.arduino.ldscript: esp32s3-8mb-psram.ld
+    build_flags:
+      # In addition to lilygo's settings:
+      # To enable reading logs over USB until `hardware_uart: USB_CDC` support
+      # is added to `logger:`, as detailed in <https://github.com/esphome/feature-requests/issues/1906>:
+      - "-DARDUINO_USB_MODE=1"
+      - "-DARDUINO_USB_CDC_ON_BOOT=1"
+  on_loop:
+    - lambda: |-
+        if(id(wifi_component).is_connected()) {
+          if (id(espcam_update)) {
+            id(espcam).update_camera_parameters();
+            if(id(debug)) { id(espcam).dump_config(); }
+            id(espcam_update) = false;
+          }
+        }
+  on_boot: 
+    then:
+      - logger.log: "Booting ESP32Cam FreeNove"
+
+esp32:
+  variant: esp32s3
+  board: esp32-s3-devkitc-1
+  framework:
+    type: arduino
+    version: recommended
+  flash_size: 8MB
+
+# external_components:
+#   - source: 
+#       type: git
+#       url: https://github.com/Rudd-O/esphome_freenove_camera_component
+#     components: [ esp32_camera ]
+
+# Enable logging
+logger:
+
+# Enable Home Assistant API
+api:
+  encryption:
+    key: pDKouA1bOPtYPOGi2VB20TcYLuTO74tGEkGo3Il4zw4=
+#  password: !secret api_password
+
+ota:
+  - platform: esphome
+    password: !secret ota_password
+
+wifi:
+  id: wifi_component
+  ssid: !secret ssid
+  password: !secret ssid_password
+  fast_connect: off
+
+  # Enable fallback hotspot (captive portal) in case wifi connection fails
+  ap:
+    ssid: "Esp32Cam Fallback Hotspot"
+    password: !secret ap_password
+
+captive_portal:
+
+web_server:
+  port: 80
+
+globals:
+# the debug parameter determines whether a config dump is done after making changes
+# this is helpful when doing initial setup, but once everything is working, I turn it off
+  - id: debug
+    type: bool
+    initial_value: 'true'
+# value to track if camera parameters have been changed
+#   used to trigger the loop() code inserted in 'esphome' section above
+  - id: espcam_update
+    type: bool
+    initial_value: 'false'
+
+time:
+  - platform: homeassistant
+    id: homeassistant_time
+
+binary_sensor:
+  - platform: status
+    name: "ESP32Cam FreeNove Status"
+
+sensor:
+  - platform: wifi_signal
+    id: signal_strength
+    name: "Wifi Signal Strength"
+    update_interval: 60s
+
+button:
+# enable a Factory Reset button if you want one
+  - platform: factory_reset
+    id: factory_reset_button
+    name: "Factory reset"
+# enable a reboot button
+  - platform: restart
+    name: "Restart"
+# enable a 'safe mode' reboot button
+  - platform: safe_mode
+    name: "Safe Mode"
+
+text_sensor:
+# Add text output for Wifi Info
+  - platform: wifi_info
+    ip_address:
+      name: "Wifi Info: IP Address"
+    ssid:
+      name: "Wifi Info: SSID"    
+
+# Specific for the Freenove unit
+esp32_camera:
+  id: espcam
+  external_clock:
+    pin: GPIO15
+    frequency: 20MHz
+  i2c_pins:
+    sda: GPIO4
+    scl: GPIO5
+  data_pins: [GPIO11, GPIO9, GPIO8, GPIO10, GPIO12, GPIO18, GPIO17, GPIO16]
+  vsync_pin: GPIO6
+  href_pin: GPIO7
+  pixel_clock_pin: GPIO13
+  resolution: 800x600
+  jpeg_quality: 10
+  max_framerate: 12 q              fps
+  idle_framerate: 0.1fps
+  frame_buffer_count: 2
+
+  # Image settings
+  name: ESP32-FreeNove-Camera
+
+  # The following parameters can be changed on the fly after the camera is started
+  #  by calling update_camera_parameters() in lambda
+  vertical_flip: false
+  horizontal_mirror: true
+  # contrast, brightness, & saturation seem to have little to no effect when called using update_camera_parameters()
+  #  at least for my camera - esp32-s3-wroom-1 N8R8 from Freenove
+  contrast: 0
+  brightness: 0
+  saturation: 0
+  special_effect: NONE
+  # exposure settings
+  aec_mode: AUTO
+  aec2: False
+  ae_level: 0
+  aec_value: 300
+  # gain settings
+  agc_mode: AUTO
+  agc_gain_ceiling: 2X
+  agc_value: 0
+  # white balance setting
+  wb_mode: AUTO
+  # test pattern
+  test_pattern: False  
+
+
+esp32_camera_web_server:
+  - port: 8080
+    mode: stream
+  - port: 8081
+    mode: snapshot
+
+# create switches for turning a parameter on or off
+switch:
+# on/off switch for Vertical Flip (my default = off, therefore: RESTORE_DEFAULT_OFF)
+  - platform: template
+    name: "Vertical Flip"
+    id: v_flip
+    icon: mdi:swap-vertical
+    restore_mode: RESTORE_DEFAULT_OFF
+    optimistic: true
+    turn_on_action:
+      lambda: |-
+        id(espcam).set_vertical_flip(true);
+        id(espcam_update) = true;
+    turn_off_action:
+      lambda: |-
+        id(espcam).set_vertical_flip(false);
+        id(espcam_update) = true;
+# on/off switch for Horizontal Mirror (my default = on, therefore: RESTORE_DEFAULT_ON)
+  - platform: template
+    name: "Horizontal Mirror"
+    id: h_mirror
+    icon: mdi:reflect-horizontal
+    restore_mode: RESTORE_DEFAULT_ON
+    optimistic: true
+    turn_on_action:
+      lambda: |-
+        id(espcam).set_horizontal_mirror(true);
+        id(espcam_update) = true;
+    turn_off_action:
+      lambda: |-
+        id(espcam).set_horizontal_mirror(false);
+        id(espcam_update) = true;
+# on/off switch for Auto Exposure 2 (my default = off, therefore: RESTORE_DEFAULT_OFF)
+  - platform: template
+    name: "Auto Exposure 2"
+    id: aec_2
+    icon: mdi:auto-fix
+    restore_mode: RESTORE_DEFAULT_OFF
+    optimistic: true
+    turn_on_action:
+      lambda: |-
+        id(espcam).set_aec2(true);
+        id(espcam_update) = true;
+    turn_off_action:
+      lambda: |-
+        id(espcam).set_aec2(false);
+        id(espcam_update) = true;    

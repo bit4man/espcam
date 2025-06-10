@@ -1,0 +1,6 @@
+substitutions:
+  name: espcam-01
+  friendly_name: ESP32-CAM Camera 1
+  loglevel: INFO
+
+<<: !include esp32cam-template.esphome.yaml

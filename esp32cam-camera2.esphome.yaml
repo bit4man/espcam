@@ -1,0 +1,6 @@
+substitutions:
+  name: espcam-02
+  friendly_name: 3D Printer Cam
+  loglevel: DEBUG
+
+<<: !include esp32cam-template.esphome.yaml

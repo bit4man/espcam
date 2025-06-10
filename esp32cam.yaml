@@ -1,6 +1,6 @@
 esphome:
-  platformio_options: 
-    abc: def
+  # platformio_options: 
+    # abc: def
   name: esp32cam
 
 esp32:
@@ -27,10 +27,13 @@ logger:
 
 # Enable Home Assistant API
 api:
-  password: !secret api_password
+  encryption:
+    key: pDKouA1bOPtYPOGi2VB20TcYLuTO74tGEkGo3Il4zw4=
+#  password: !secret api_password
 
 ota:
-  password: !secret ota_password
+  - platform: esphome
+    password: !secret ota_password
 
 wifi:
   ssid: !secret ssid
@@ -56,9 +59,7 @@ sensor:
 
 # Example configuration entry
 esp32_camera:
-  aec_mode: AUTO
   id: camera1
-  aec2: True
   external_clock:
     pin: GPIO0
     frequency: 20MHz
@@ -72,13 +73,21 @@ esp32_camera:
   power_down_pin: GPIO32
 
   # Image settings
+  aec2: True
+  aec_mode: AUTO
   name: My Camera
-  resolution: SVGA
-  max_framerate: 10 fps
-  idle_framerate: 0.1 fps
+#  resolution: 800X600
+  resolution: 1280x1024
+  max_framerate: 12 fps
+  idle_framerate: 1 fps
   jpeg_quality: 10
   wb_mode: home
-  agc_gain_ceiling: 128x
+  agc_gain_ceiling: 8x
   vertical_flip: False
   horizontal_mirror: False
 
+esp32_camera_web_server:
+  - port: 8080
+    mode: stream
+  - port: 8081
+    mode: snapshot

@@ -1,0 +1,6 @@
+substitutions:
+  name: espcam-deercam
+  friendly_name: Outside Deer Camera
+  loglevel: DEBUG
+
+<<: !include esp32cam-template.esphome.yaml

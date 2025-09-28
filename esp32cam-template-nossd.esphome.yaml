@@ -1,0 +1,134 @@
+# This requires substitutions or parameters on the cli
+
+esphome:
+  name: ${name}
+  friendly_name: ${friendly_name}
+  platformio_options:
+    monitor_speed: 460800
+  # build_flags:
+  #     # In addition to lilygo's settings:
+  #     # To enable reading logs over USB until `hardware_uart: USB_CDC` support
+  #     # is added to `logger:`, as detailed in <https://github.com/esphome/feature-requests/issues/1906>:
+  #  - "-DARDUINO_USB_MODE=1"
+  #   - "-DARDUINO_USB_CDC_ON_BOOT=1"
+  #     - "-DBOARD_HAS_PSRAM"
+  on_boot: 
+    then:
+      - light.turn_off: espcam_flashlight
+
+esp32:
+  board: esp32cam
+  framework:
+    type: esp-idf
+
+# psram:
+#   mode: quad
+#   speed: 80MHz
+
+# debug:
+#   update_interval: 120s
+
+# Enable logging
+logger: 
+  level: INFO
+
+# select: 
+#   - platform: logger
+#     name: "Logger Level"
+#     id: log_level
+
+# text_sensor:
+#   - platform: debug
+#     device:
+#       name: "Device Info"
+#     reset_reason:
+#       name: "Reset Reason"
+
+# sensor:
+#   - platform: debug
+#     free:
+#       name: "Heap Free"
+#     psram:
+#       name: "Free PSRAM" 
+
+# Enable Home Assistant API
+api:
+  encryption:
+    key: !secret hasskey
+
+ota:
+  - platform: esphome
+    password: !secret ota_password
+
+wifi:
+  ssid: !secret ssid
+  password: !secret ssid_password
+  fast_connect: True
+
+text_sensor:
+  - platform: wifi_info
+    ip_address:
+      name: ESP IP Address
+    ssid:
+      name: ESP Connected SSID
+    bssid:
+      name: ESP Connected BSSID
+    mac_address:
+      name: ESP Mac Wifi Address
+    dns_address:
+      name: ESP DNS Address
+
+sensor:
+  - platform: wifi_signal
+    name: ESP WiFi Signal Strength
+    update_interval: 60s
+    id: wifi_signal_strength
+
+# captive_portal:
+
+i2c:
+  sda: GPIO26
+  scl: GPIO27
+  scan: False
+  id: i2c_bus
+
+esp32_camera:
+  name: ${name}
+  external_clock:
+    pin: GPIO0
+    frequency: 20MHz
+  i2c_id: i2c_bus
+  data_pins: [GPIO5, GPIO18, GPIO19, GPIO21, GPIO36, GPIO39, GPIO34, GPIO35]
+  vsync_pin: GPIO25
+  href_pin: GPIO23
+  pixel_clock_pin: GPIO22
+  power_down_pin: GPIO32
+  resolution: 1024x768
+  max_framerate: 3 fps
+  jpeg_quality: 10
+  idle_framerate: 0.1 fps
+  
+
+esp32_camera_web_server:
+  - port: 8080
+    mode: stream
+  - port: 8081
+    mode: snapshot
+
+output:
+  - platform: ledc
+    pin: GPIO4
+    id: gpio_4
+    channel: 2
+
+light:
+  - platform: monochromatic
+    output: gpio_4
+    name: "${friendly_name} Flashlight"
+    restore_mode: ALWAYS_OFF
+    id: espcam_flashlight
+
+button:
+  - platform: restart
+    name: "Restart"
+     

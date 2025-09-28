@@ -3,13 +3,13 @@
 esphome:
   name: ${name}
   friendly_name: ${friendly_name}
-  platformio_options:
-      build_flags:
+  # platformio_options:
+      # build_flags:
       # In addition to lilygo's settings:
       # To enable reading logs over USB until `hardware_uart: USB_CDC` support
       # is added to `logger:`, as detailed in <https://github.com/esphome/feature-requests/issues/1906>:
-      - "-DARDUINO_USB_MODE=1"
-      - "-DARDUINO_USB_CDC_ON_BOOT=1"
+      # - "-DARDUINO_USB_MODE=1"
+      # - "-DARDUINO_USB_CDC_ON_BOOT=1"
   on_boot: 
     then:
       - light.turn_off: espcam_flashlight
@@ -23,6 +23,7 @@ esp32:
 external_components:
   - source: github://mnark/esphome-components
     components: [sdmmc]
+    refresh: 1d
 
 globals:
   - id: save_to_disk

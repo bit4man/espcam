@@ -1,0 +1,13 @@
+esphome:
+  name: test-bare
+
+esp32:
+  board: esp32cam
+  framework:
+    type: esp-idf
+
+logger:
+
+wifi:
+  ssid: !secret ssid
+  password: !secret ssid_password

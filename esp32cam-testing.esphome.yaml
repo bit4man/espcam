@@ -1,0 +1,56 @@
+substitutions:
+  name: espcam-testing
+  friendly_name: Outside Deer Camera Testing
+  loglevel: DEBUG
+
+esphome:
+  name: ${name}
+  on_boot:
+    then:
+      - light.turn_on: espcam_flashlight   # turn ON so you can see it boot
+      - delay: 10s
+      - light.turn_off: espcam_flashlight  # turn OFF to save power
+
+esp32:
+  board: esp32cam
+  framework:
+    type: esp-idf
+
+
+psram:
+  mode: quad
+
+logger:
+  level: ${loglevel}
+  hardware_uart: UART0
+  baud_rate: 115200
+
+wifi:
+  ssid: !secret ssid
+  password: !secret ssid_password
+
+
+api:
+  encryption:
+    key: !secret hasskey
+
+ota:
+  - platform: esphome
+    password: !secret ota_password
+
+output:
+  - platform: ledc
+    pin: GPIO4
+    id: gpio_4
+    channel: 2
+
+light:
+  - platform: monochromatic
+    output: gpio_4
+    name: "Flash"
+    restore_mode: ALWAYS_OFF
+    id: espcam_flashlight
+
+button:
+  - platform: restart
+    name: "Restart"
